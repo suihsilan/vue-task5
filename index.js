@@ -128,6 +128,19 @@ const app = createApp({
           console.log(err.data.message);
         });
     },
+    deleteItem(item) {
+      axios
+        .delete(`${apiUrl}/v2/api/${apiPath}/cart/${item.id}`)
+        .then((res) => {
+          //刪除購物車後
+          console.log("刪除購物車:", res.data);
+          //重新取的購物車列表
+          this.getCarts();
+        })
+        .catch((err) => {
+          console.log(err.data.message);
+        });
+    },
   },
   components: {
     //區域註冊元件
