@@ -11,6 +11,7 @@ const productModal = {
     return {
       modal: {}, //存取實體化的modal
       tempProduct: {},
+      qty: 1,
     };
   },
   template: "#userProductModal",
