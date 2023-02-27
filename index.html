@@ -24,7 +24,11 @@
       <div class="container">
         <!--產品modal-->
         <!--productID: id-->
-        <product-modal :id="productId"></product-modal>
+        <product-modal
+          :id="productId"
+          :add-to-cart="addToCart"
+          ref="productModal"
+        ></product-modal>
         <!--產品modal-->
         <div class="mt-4">
           <table class="table align-middle">
@@ -68,7 +72,11 @@
                       <i class="fas fa-spinner fa-pulse"></i>
                       查看更多
                     </button>
-                    <button type="button" class="btn btn-outline-danger">
+                    <button
+                      type="button"
+                      class="btn btn-outline-danger"
+                      @click="addToCart(product.id)"
+                    >
                       <i class="fas fa-spinner fa-pulse"></i>
                       加到購物車
                     </button>
@@ -242,15 +250,11 @@
                   <p>商品描述：{{ tempProduct.description }}</p>
                   <p>商品內容：{{ tempProduct.content }}</p>
                   <div class="h5">{{ tempProduct.price }} 元</div>
-                  <!-- <div v-else>
-                    <del class="h6">原價 {{tempProduct.origin_price }} 元</del>
-                    <div class="h5">現在只要 {{ tempProduct.price }} 元</div>
-                  </div> -->
                   <div>
                     <div class="input-group">
                       <input type="number" class="form-control"
                              min="1">
-                      <button type="button" class="btn btn-primary">加入購物車</button>
+                      <button type="button" class="btn btn-primary" @click="addToCart(tempProduct.id)">加入購物車</button>
             </div>
             </div>
             </div>

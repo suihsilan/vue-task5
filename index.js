@@ -6,7 +6,7 @@ const apiPath = "sui-vue";
 //單一產品modal的元件
 const productModal = {
   //當id變動時，取的遠端資料,並呈現modal
-  props: ["id"],
+  props: ["id", "addToCart"],
   data() {
     return {
       modal: {}, //存取實體化的modal
@@ -31,6 +31,11 @@ const productModal = {
         });
 
       this.modal.show();
+    },
+  },
+  methods: {
+    hide() {
+      this.modal.hide();
     },
   },
   mounted() {
@@ -67,6 +72,25 @@ const app = createApp({
       //傳入該產品的id因應資料顯現正確的產品內容
       this.productId = id;
       console.log("外層帶入的product id", id);
+    },
+    addToCart(product_id, qty = 1) {
+      //當沒有傳入該參數時，會使用預設值
+      //加入購物車方法
+      const data = {
+        //api需要的欄位結構
+        product_id,
+        qty,
+      };
+
+      axios
+        .post(`${apiUrl}/v2/api/${apiPath}/cart`, { data })
+        .then((res) => {
+          console.log("加入購物車", res.data);
+          this.$refs.productModal.hide();
+        })
+        .catch((err) => {
+          console.log(err.data.message);
+        });
     },
   },
   components: {
