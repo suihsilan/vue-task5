@@ -52,7 +52,7 @@ const app = createApp({
     return {
       products: [], //產品列表
       productId: "",
-      carts: [],
+      cart: {},
     };
   },
   methods: {
@@ -88,6 +88,21 @@ const app = createApp({
         .then((res) => {
           console.log("加入購物車", res.data);
           this.$refs.productModal.hide();
+          //觸發取的購物車列表方法
+          this.getCarts();
+        })
+        .catch((err) => {
+          console.log(err.data.message);
+        });
+    },
+    getCarts() {
+      //取得購物車列表方法
+      axios
+        .get(`${apiUrl}/v2/api/${apiPath}/cart`)
+        .then((res) => {
+          console.log("購物車:", res.data.data);
+          //存入購物車列表
+          this.cart = res.data.data;
         })
         .catch((err) => {
           console.log(err.data.message);
@@ -101,6 +116,8 @@ const app = createApp({
   mounted() {
     //在畫面生成之後，觸發取的產品資料的方法
     this.getProducts();
+    //執行取的購物車列表
+    this.getCarts();
   },
 });
 
