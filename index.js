@@ -108,6 +108,26 @@ const app = createApp({
           console.log(err.data.message);
         });
     },
+    updateCartItem(item) {
+      //item中的購物車的id ,產品的id
+      //更新購物車資料(這段會比較複雜)
+      const data = {
+        product_id: item.product.id,
+        qty: item.qty,
+      };
+      console.log("data", data, "購物車id", item.id);
+      axios
+        .put(`${apiUrl}/v2/api/${apiPath}/cart/${item.id}`, { data })
+        .then((res) => {
+          //更新購物車後
+          console.log("更新購物車:", res.data.data);
+          //重新取的購物車列表
+          this.getCarts();
+        })
+        .catch((err) => {
+          console.log(err.data.message);
+        });
+    },
   },
   components: {
     //區域註冊元件
