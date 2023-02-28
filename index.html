@@ -27,6 +27,7 @@
         <product-modal
           :id="productId"
           :add-to-cart="addToCart"
+          :open-modal="openModal"
           ref="productModal"
         ></product-modal>
         <!--產品modal-->
@@ -106,6 +107,7 @@
                 <tr v-for="item in cart.carts" :key="item.id">
                   <td>
                     <button
+                      :disabled="item.id === loadingItem"
                       type="button"
                       class="btn btn-outline-danger btn-sm"
                       @click="deleteItem(item)"
@@ -121,6 +123,7 @@
                   <td>
                     <div class="input-group input-group-sm">
                       <select
+                        :disabled="item.id === loadingItem"
                         name=""
                         id=""
                         v-model="item.qty"

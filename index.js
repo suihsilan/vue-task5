@@ -6,7 +6,7 @@ const apiPath = "sui-vue";
 //單一產品modal的元件
 const productModal = {
   //當id變動時，取的遠端資料,並呈現modal
-  props: ["id", "addToCart"],
+  props: ["id", "addToCart", "openModal"],
   data() {
     return {
       modal: {}, //存取實體化的modal
@@ -18,20 +18,23 @@ const productModal = {
   watch: {
     //利用watch監聽props傳入的id值是否有更新/變動
     id() {
+      //id變動了
       console.log("productModal:", this.id);
-      //發送請求，取得單一產品資料
-      axios
-        .get(`${apiUrl}/v2/api/${apiPath}/product/${this.id}`)
-        .then((res) => {
-          console.log("單一產品", res.data.product);
-          //存入到this.tempProduct 單一產品細節資料
-          this.tempProduct = res.data.product;
-        })
-        .catch((err) => {
-          console.log(err.data.message);
-        });
-
-      this.modal.show();
+      if (this.id) {
+        //當id存在時才發送請求
+        //發送請求，取得單一產品資料
+        axios
+          .get(`${apiUrl}/v2/api/${apiPath}/product/${this.id}`)
+          .then((res) => {
+            console.log("單一產品", res.data.product);
+            //存入到this.tempProduct 單一產品細節資料
+            this.tempProduct = res.data.product;
+            this.modal.show();
+          })
+          .catch((err) => {
+            console.log(err.data.message);
+          });
+      }
     },
   },
   methods: {
@@ -43,7 +46,10 @@ const productModal = {
     //生成modal的生命週期
     //modal實體化
     this.modal = new bootstrap.Modal(this.$refs.modal);
-    // this.modal.show();
+    //監聽dom 當modal關閉時...要做其他事情
+    this.$refs.modal.addEventListener("hidden.bs.modal", (event) => {
+      this.openModal(""); //更改id
+    });
   },
 };
 
@@ -53,6 +59,7 @@ const app = createApp({
       products: [], //產品列表
       productId: "",
       cart: {},
+      loadingItem: "", //存id
     };
   },
   methods: {
@@ -115,7 +122,9 @@ const app = createApp({
         product_id: item.product.id,
         qty: item.qty,
       };
-      console.log("data", data, "購物車id", item.id);
+      // console.log("data", data, "購物車id", item.id);
+      //發送ajax之前先將品項的id存在變數裡
+      this.loadingItem = item.id;
       axios
         .put(`${apiUrl}/v2/api/${apiPath}/cart/${item.id}`, { data })
         .then((res) => {
@@ -123,6 +132,8 @@ const app = createApp({
           console.log("更新購物車:", res.data.data);
           //重新取的購物車列表
           this.getCarts();
+          //已發送請求更新資料後再把這個變數清除，才可以再繼續選擇數量
+          this.loadingItem = null;
         })
         .catch((err) => {
           console.log(err.data.message);
@@ -136,6 +147,7 @@ const app = createApp({
           console.log("刪除購物車:", res.data);
           //重新取的購物車列表
           this.getCarts();
+          this.loadingItem = null;
         })
         .catch((err) => {
           console.log(err.data.message);
