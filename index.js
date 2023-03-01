@@ -1,7 +1,29 @@
-import { createApp } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
+// import { createApp } from "https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.47/vue.esm-browser.min.js";
+
+const { defineRule, Form, Field, ErrorMessage, configure } = VeeValidate;
+const { required, email, min, max } = VeeValidateRules;
+const { localize, loadLocaleFromURL } = VeeValidateI18n;
+
+defineRule("required", required);
+defineRule("email", email);
+
+// 讀取外部的資源
+loadLocaleFromURL("./zh_TW.json");
+
+// Activate the locale
+configure({
+  generateMessage: localize("zh_TW"),
+  validateOnInput: true, // 調整為：輸入文字時，就立即進行驗證
+});
 
 const apiUrl = "https://vue3-course-api.hexschool.io";
 const apiPath = "sui-vue";
+
+Object.keys(VeeValidateRules).forEach((rule) => {
+  if (rule !== "default") {
+    VeeValidate.defineRule(rule, VeeValidateRules[rule]);
+  }
+});
 
 //單一產品modal的元件
 const productModal = {
@@ -53,14 +75,30 @@ const productModal = {
   },
 };
 
-const app = createApp({
+Vue.createApp({
   data() {
     return {
       products: [], //產品列表
       productId: "",
       cart: {},
       loadingItem: "", //存id
+      form: {
+        user: {
+          name: "",
+          email: "",
+          tel: "",
+          address: "",
+        },
+        message: "",
+      },
     };
+  },
+  components: {
+    //區域註冊元件
+    productModal,
+    VForm: Form,
+    VField: Field,
+    ErrorMessage: ErrorMessage,
   },
   methods: {
     getProducts() {
@@ -68,7 +106,7 @@ const app = createApp({
       axios
         .get(`${apiUrl}/v2/api/${apiPath}/products/all`)
         .then((res) => {
-          console.log("產品列表", res.data.products);
+          // console.log("產品列表", res.data.products);
           //存入到this.products
           this.products = res.data.products;
         })
@@ -79,7 +117,7 @@ const app = createApp({
     openModal(id) {
       //傳入該產品的id因應資料顯現正確的產品內容
       this.productId = id;
-      console.log("外層帶入的product id", id);
+      // console.log("外層帶入的product id", id);
     },
     addToCart(product_id, qty = 1) {
       //當沒有傳入該參數時，會使用預設值
@@ -93,7 +131,12 @@ const app = createApp({
       axios
         .post(`${apiUrl}/v2/api/${apiPath}/cart`, { data })
         .then((res) => {
-          console.log("加入購物車", res.data);
+          let loader = this.$loading.show();
+          // simulate AJAX
+          setTimeout(() => {
+            loader.hide();
+          }, 500);
+          // console.log("加入購物車", res.data);
           this.$refs.productModal.hide();
           //觸發取的購物車列表方法
           this.getCarts();
@@ -107,7 +150,7 @@ const app = createApp({
       axios
         .get(`${apiUrl}/v2/api/${apiPath}/cart`)
         .then((res) => {
-          console.log("購物車:", res.data.data);
+          // console.log("購物車:", res.data.data);
           //存入購物車列表
           this.cart = res.data.data;
         })
@@ -129,9 +172,15 @@ const app = createApp({
         .put(`${apiUrl}/v2/api/${apiPath}/cart/${item.id}`, { data })
         .then((res) => {
           //更新購物車後
-          console.log("更新購物車:", res.data.data);
+          // console.log("更新購物車:", res.data.data);
+          this.cart = res.data.data;
           //重新取的購物車列表
           this.getCarts();
+          let loader = this.$loading.show();
+          // simulate AJAX
+          setTimeout(() => {
+            loader.hide();
+          }, 500);
           //已發送請求更新資料後再把這個變數清除，才可以再繼續選擇數量
           this.loadingItem = null;
         })
@@ -144,26 +193,72 @@ const app = createApp({
         .delete(`${apiUrl}/v2/api/${apiPath}/cart/${item.id}`)
         .then((res) => {
           //刪除購物車後
-          console.log("刪除購物車:", res.data);
+          // console.log("刪除購物車:", res.data);
           //重新取的購物車列表
           this.getCarts();
+          let loader = this.$loading.show();
+          // simulate AJAX
+          setTimeout(() => {
+            loader.hide();
+          }, 500);
           this.loadingItem = null;
         })
         .catch((err) => {
           console.log(err.data.message);
         });
     },
-  },
-  components: {
-    //區域註冊元件
-    productModal,
+    clearCart() {
+      axios
+        .delete(`${apiUrl}/v2/api/${apiPath}/carts`)
+        .then((res) => {
+          this.getCarts();
+          let loader = this.$loading.show();
+          // simulate AJAX
+          setTimeout(() => {
+            loader.hide();
+          }, 500);
+          this.loadingItem = null;
+        })
+        .catch((err) => {
+          console.log(err.data.message);
+        });
+    },
+    onSubmit() {
+      // console.log("按我");
+      const url = `${apiUrl}/v2/api/${apiPath}/order`;
+      const order = this.form;
+      axios
+        .post(url, { data: order })
+        .then((response) => {
+          alert("結帳成功");
+          this.getCarts();
+          let loader = this.$loading.show();
+          // simulate AJAX
+          setTimeout(() => {
+            loader.hide();
+          }, 500);
+          this.$refs.form.resetForm();
+        })
+        .catch((err) => {
+          alert(err.response.data.message);
+        });
+    },
+    isPhone(value) {
+      const phoneNumber = /^(09)[0-9]{8}$/;
+      return phoneNumber.test(value) ? true : "需要正確的電話號碼";
+    },
   },
   mounted() {
     //在畫面生成之後，觸發取的產品資料的方法
     this.getProducts();
     //執行取的購物車列表
     this.getCarts();
-  },
-});
 
-app.mount("#app");
+    let loader = this.$loading.show();
+    setTimeout(() => {
+      loader.hide();
+    }, 1500);
+  },
+})
+  .use(VueLoading.LoadingPlugin)
+  .mount("#app");
